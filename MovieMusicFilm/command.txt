@@ -1,0 +1,3 @@
+search "1995" in "year" 
+search "Spice" in "genre" 
+sort "year"
