@@ -21,25 +21,25 @@ int main(int argc, char const *argv[]){
 	vector<int> tile;
 	outfile.open("output.txt", ios::out | ios::trunc );
 
-	SparseVector samet("r1.txt");
-	SparseVector sulo("r2.txt");
+	SparseVector sample("r1.txt");
+	SparseVector sample1("r2.txt");
 	SparseVector cigi;
 	double number;
-	SparseMatrix eyup("r3.txt");
-	SparseMatrix enes("r4.txt");
+	SparseMatrix sample2("r3.txt");
+	SparseMatrix sample3("r4.txt");
 	SparseMatrix sad;
 
 	cout << "----------------R1--------------" << endl;
-	cout << samet;
+	cout << sample;
 	cout << endl;
 	cout << "--------------R2-----------------" << endl;
-	cout << sulo;
+	cout << sample1;
 	cout << endl;
-	cigi = samet+sulo;
+	cigi = sample+sample1;
 	cout << "-----------R1+R2----------------" << endl;
 	cout << cigi;
 	cout << endl;
-	number = dot(sulo,samet);
+	number = dot(sample1,sample);
 	outfile << number ;
 	cout <<"----------R2*R1--------------" << endl;
 	cout << number;
@@ -47,25 +47,25 @@ int main(int argc, char const *argv[]){
 
 
 	cout << "-----------R3--------------" << endl;
-	cout << eyup;
+	cout << sample2;
 	cout << endl;
 	cout << "----------------R4------------------" << endl;
-	cout << enes;
+	cout << sample3;
 	cout << endl;
-	sad = eyup+enes;
+	sad = sample2+sample3;
 	cout << "-------------R3+R4---------------" << endl;
 	cout << sad;
 	cout << endl;
-	sad = eyup*enes;
+	sad = sample2*sample3;
 	cout <<"-------------R3*R4---------------" << endl;
 	cout << sad;
 	cout << endl;
-	sad = transpose(enes);
+	sad = transpose(sample3);
 	cout << "----------------R4--TRANSPOSE------------" << endl;
 	cout << sad;
 	cout << endl;
 	cout << "--------------R3 NEGATiVE---------------" << endl;
-	sad = -eyup;
+	sad = -sample2;
 	cout << sad;
 	cout << endl;
  
