@@ -1,0 +1,1107 @@
+#include <iostream>
+#include <vector>
+#include <ctime>
+
+
+using namespace std;
+class player{
+public:
+	player();//Player classinin parametre almayan constructor
+	player(char user,int exit);//2 parametreli constructor
+	inline char getUser()const{return user;}//getter of user
+	inline int getExit()const{return exit;}//getter of getEXit
+	inline int getXCoordinate()const{return xCoordinate;}//getter of X coordinate
+	inline int getYCoordinate()const{return yCoordinate;}//getter of Y coordinate
+	inline char getExitWay()const{return exitWay;}//getter of exitWay
+	inline int getArea()const{return area;}//getter of Area
+	void setArea(int area);//***********************************
+	void setExitWay(char ch);//                                *
+	void setXCoordinate(int x);//tum degiskenlerin setterlari  *
+	void setYCoordinate(int y);//                              *
+	void setUser(char user);//                                 *
+	void setExit(int exit);//***********************************
+	vector<vector<vector<char>>> gameCards;//kullacinin elindeki uc karti tutan 3 boyutlu vector
+
+private:
+	char user;
+	int exit;
+	int xCoordinate;
+	int yCoordinate;
+	char exitWay;
+	int area;
+};
+
+class Game{
+public:
+	Game();//game classi constructori
+	vector<vector<char>> gameBoard;//oyun tahtası vectoru
+	inline char getPosition(){return position;}
+	void setPosition(char position);
+	void initialize();//oyun tahtasinin olusturan fonksiyon x ve y leri aynı zamanda random atar
+	void print();//oyunun guncel halinin bastirir
+	vector<vector<char>> card();//otomatik olarak her seferinde farkli olacak sekilde kart uretir
+	int controlRandom(vector<int> arr,int num1,int num2);//kart uretirken daha gelen sayinin daha once gelip gelmedigini kontrol eder
+	int controlRandom2(vector<int> arr,int num1);//aynı fonksiyonun tek parametrelisidr
+	void cardBase(vector<vector<char>> &card,int num,int num1,int num2);//kartin temeline atamalar yapan fonksiyon
+	int playGame();//oyunun oynandigi fonksiyon 
+	vector<vector<char>> turnFun(vector<vector<char>> &card,int turn);//kartin donduruldugu fonksiyon
+	void putBoard(vector<vector<char>> card,int area);//kullanicin kartini oyun tahtasina yerlestiren fonksiyon
+	int controlOfExit(player userX,player userY);//kullacilarin oyun disina cikip cikmadigini kontrol eden fonksiyon
+	int moveNumber(player &user,char point);//baslangic icin kullancilarin taslarini hareket ettiren fonksiyon
+	int controlOfArea(int x, int y);//kullanicinin hangi bolgede oldugunu bulan fonksiyon
+	int firstMove(player &user,char point);//taslarin her turlu hareketini saglayan fonksiyon
+	int findO(int i,int j,player &user,char point);//t'asin etrafinda 'o' harfinin olup olmadigini kontrol eder
+	int betweenTwoCard(player &user);//iki kart arası gecis icin kullanilan fonksiyon
+	void extraFunction(player &user,int i,int j,char point);//kartlar arasi geciste kontrolleri yapan fonksiyon
+
+private:
+	char position;
+
+};
+Game::Game(){
+	initialize();
+}
+player::player(){
+	user = 'X';
+}
+player::player(char user,int exit){
+	setUser(user);
+	setExit(exit);
+
+	gameCards.resize(3);
+	for(int i = 0; i < 3; i++){
+    	gameCards.resize(6);
+    	for(int j = 0; j < 6; j++){
+	    	gameCards.resize(12);
+	    }  
+	}
+}
+void player::setArea(int area){
+	this->area = area;
+}
+void player::setExitWay(char ch){
+	exitWay = ch;
+}
+void player::setXCoordinate(int x){
+	xCoordinate = x;
+}
+void player::setYCoordinate(int y){
+	yCoordinate = y;
+}
+void player::setUser(char user){
+	this->user=user;
+}
+void player::setExit(int exit){
+	this->exit=exit;
+}
+void Game::setPosition(char position){
+	this->position = position;
+}
+void Game::initialize(){
+	srand(time(NULL));
+	int r,r1,counter = 0 , status = 0;
+
+	gameBoard.resize(20); 
+	for(int i = 0; i < 20; i++){
+    	gameBoard[i].resize(40);
+    	for(int j = 0; j < 40; j++){
+	    	gameBoard[i][j] = ' ';
+	    }  
+	}
+	for(int i =1; i < 19;i++){
+		gameBoard[i][0] = '|';
+		gameBoard[i][39] = '|';
+	}
+	for(int i =0; i < 40;i++){
+		gameBoard[0][i] = '-';
+		gameBoard[19][i] = '-';
+	}
+	//giris ve cikislari yerlestiriyor
+	gameBoard[0][6] = 'o';
+	gameBoard[0][9] = 'o';
+	gameBoard[0][18] = 'o';
+	gameBoard[0][21] = 'o';
+	gameBoard[0][30] = 'o';
+	gameBoard[0][33] = 'o';
+	gameBoard[19][6] = 'o';
+	gameBoard[19][9] = 'o';
+	gameBoard[19][18] = 'o';
+	gameBoard[19][21] = 'o';
+	gameBoard[19][30] = 'o';
+	gameBoard[19][33] = 'o';
+	gameBoard[3][0] = 'o';
+	gameBoard[4][0] = 'o';
+	gameBoard[9][0] = 'o';
+	gameBoard[10][0] = 'o';
+	gameBoard[15][0] = 'o';
+	gameBoard[16][0] = 'o';
+	gameBoard[3][39] = 'o';
+	gameBoard[4][39] = 'o';
+	gameBoard[9][39] = 'o';
+	gameBoard[10][39] = 'o';
+	gameBoard[15][39] = 'o';
+	gameBoard[16][39] = 'o';
+
+	do{
+		r = rand()%24;
+		r1 = rand()%24;
+
+	}while(r == r1);
+	//gelen random sayilara gore X ve Y kulalnicilari oyun tahtasina yerlestiriyor
+	for(int i = 0; i < 20 && status != 2; i++){
+    	for(int j = 0; j < 40; j++){
+	    	if(gameBoard[i][j] == 'o'){
+	    		if(counter == r){
+		    		gameBoard[i][j] = 'X';
+		    		status++;
+	    		}else if(counter == r1){
+	    			gameBoard[i][j] = 'Y';
+		    		status++;
+	    		}
+	    		counter++;
+	    	}
+	    }  
+	}
+}
+void Game::print(){
+	for (int i = 0; i < 20; i++){
+	    for (int j = 0; j < 40; j++){
+	    	cout << gameBoard[i][j];
+	    }
+	    cout << endl;
+	}
+}
+vector<vector<char>> Game::card(){
+	vector<vector<char>> card;
+	vector<int> randTemp;
+	vector<int> random;
+	int r,r1,rand0,rand1;
+	
+	//kartin genel yapisi olusturuluyor
+	card.resize(6); 
+	for(int i = 0; i < 6; i++){
+    	card[i].resize(12);
+    	for(int j = 0; j < 12; j++){
+	    	card[i][j] = ' ';
+	    }  
+	}
+	for(int i = 0; i < 12; i++){
+		card[0][i] = '.';
+		card[5][i] = '.';
+	}
+	for(int i = 1; i < 5 ; i++){
+		card[i][0] = ':';
+		card[i][11] = ':';
+	}
+
+	int i =0;
+	while(i < 4){
+		do{
+		r = rand()%8+1;
+		r1 = rand()%8+1;
+		if(r == r1){
+		//alinan random sayilarin kartta daha once kullanilip kullanilmadigi kontrol ediliyor
+		}else if(controlRandom(random,r,r1) == 1){
+			//kullanilmadiysa ayri bir vektorun icinde tutuluyor ve boylelikle tutulan sayilar bir daha denk gelmiyor
+				random.push_back(r);
+				random.push_back(r1);
+				break;
+		}
+	}while(controlRandom(random,r,r1) == 0 || r == r1);
+
+		do{
+			rand0 = rand()%8+1;	
+			//ayni sekilde alinan random sayi daha once kullanilip kullanilmadigi kontrol ediliyor
+			if(controlRandom2(randTemp,rand0) == 1){
+				randTemp.push_back(rand0);
+				cardBase(card,r,r1,rand0);//bu fonksiyon ile sayilar yerlestiriliyor
+				break;
+			}
+		}while(controlRandom2(randTemp,rand0) == 0);
+
+		do{
+			rand1 = rand()%8+1;
+			
+			if(controlRandom2(randTemp,rand1) == 1){
+				randTemp.push_back(rand1);
+				cardBase(card,r1,r,rand1);
+				break;
+			}
+		}while(controlRandom2(randTemp,rand1) == 0);
+		i++;
+	}
+	return card;
+}
+int Game::controlRandom(vector<int> arr,int num1,int num2){
+	if(arr.size() == 0){
+		return 1;
+	}
+	for(int i = 0; i < arr.size() ; i++){
+		if(arr[i] == num1 || arr[i] == num2){
+			return 0;
+		}
+	}
+	return 1;
+}
+int Game::controlRandom2(vector<int> arr,int num1){
+	if(arr.size() == 0){
+		return 1;
+	}
+	for(int i = 0; i < arr.size() ; i++){
+		if(arr[i] == num1){
+			return 0;
+		}
+	}
+	return 1;
+}
+void Game::cardBase(vector<vector<char>> &card,int num,int num1,int num2){
+	// kartta 8 tane giris ve cikis vardir gelen sayiya gore yerlestirilir
+	if(num2 == 1){
+		card[0][4] = num + '0';
+		card[1][4] = num1 + '0';
+	}else if(num2 == 2){
+		card[0][7] = num + '0';
+		card[1][7] = num1 + '0';
+	}else if(num2 == 3){
+		card[2][11] = num + '0';
+		card[2][7] = num1 + '0';
+	}else if(num2 == 4){
+		card[3][11] = num + '0';
+		card[3][7] = num1 + '0';
+	}else if(num2 == 5){
+		card[5][7] = num + '0';
+		card[4][7] = num1 + '0';
+	}else if(num2 == 6){
+		card[5][4] = num + '0';
+		card[4][4] = num1 + '0';
+	}else if(num2 == 7){
+		card[3][0] = num + '0';
+		card[3][4] = num1 + '0';
+	}else if(num2 == 8){
+		card[2][0] = num + '0';
+		card[2][4] = num1 + '0';
+	}
+}
+vector<vector<char>> Game::turnFun(vector<vector<char>> &card,int turn){
+	char temp1,temp2;
+	turn = turn%4;	//4 kere dondurmek ayni karti verecegi icin 4 e gore modununu aldim
+		for (int i = 0; i < turn; ++i){
+			temp1 = card[0][4];
+			temp2 = card[0][7];
+			card[0][4] = card[3][0];
+			card[0][7] = card[2][0];
+			card[3][0] = card[5][7];
+			card[2][0] = card[5][4];
+			card[5][7] = card[2][11];
+			card[5][4] = card[3][11];
+			card[2][11] = temp1;
+			card[3][11] = temp2;
+			temp1 = card[1][4];
+			temp2 = card[1][7];
+			card[1][4] = card[3][4];
+			card[1][7] = card[2][4];
+			card[3][4] = card[4][7];
+			card[2][4] = card[4][4];
+			card[4][7] = card[2][7];
+			card[4][4] = card[3][7];
+			card[2][7] = temp1;
+			card[3][7] = temp2;
+		}
+}
+int Game::controlOfExit(player userX,player userY){
+	//teker teker kullacilarin cikista olup olmadigi kontrol edilir ve duruma gore oyun bitirilir
+	if((userX.getXCoordinate() == 0 || userX.getYCoordinate() == 0 || userX.getXCoordinate() == 19 || userX.getYCoordinate() == 39) 
+		&& (userY.getXCoordinate() == 0 || userY.getYCoordinate() ==0 || userY.getXCoordinate() == 19 || userY.getYCoordinate() == 39) 
+		&& (userX.getExit() == 1 && userY.getExit() == 1)){
+		cout << "BERABERE" << endl;
+		return 1;
+	}
+	if((userX.getXCoordinate() == 0 || userX.getYCoordinate() == 0 || userX.getXCoordinate() == 19 || userX.getYCoordinate() == 39) && userX.getExit() == 1){
+		cout << "Y KAZANDI" << endl;
+		return 1;
+	}
+	if((userY.getXCoordinate() == 0 || userY.getYCoordinate() ==0 || userY.getXCoordinate() == 19 || userY.getYCoordinate() == 39) && userY.getExit() == 1){
+		cout << "X KAZANDI" << endl;
+		return 1;
+	}
+	return 0;
+}
+int Game::moveNumber(player &user,char point){
+	char temp;
+	//oyunun kullanicilr icin ilk hamlelerin yapildigi fonksiyondur
+	//X veya Y nin dort bir yanina bakilir
+	if(user.getXCoordinate() == 0){
+		//eger herhangi bir yaninda sayi varsa o sayi cikis sayisi olarak alinir
+		if(gameBoard[user.getXCoordinate()+2][user.getYCoordinate()] != ' '){
+			//alinan sayi kullanicic exitWayine atanir ve hangi arada oldugu controlofarea fonksiyonu ile belirlenir
+			user.setExitWay(gameBoard[user.getXCoordinate()+2][user.getYCoordinate()]);
+			user.setArea(controlOfArea(user.getXCoordinate()+2,user.getYCoordinate()));
+			//daha sonra firstMove fonksiyonnu ile cikisi bulunur ve cikisa goturulur
+			firstMove(user,point);
+			return 1;
+		}
+	}else if(user.getYCoordinate() == 0){
+		if(gameBoard[user.getXCoordinate()][user.getYCoordinate()+6] != ' '){
+			user.setExitWay(gameBoard[user.getXCoordinate()][user.getYCoordinate()+6]);
+			user.setArea(controlOfArea(user.getXCoordinate(),user.getYCoordinate()+6));
+			firstMove(user,point);
+			return 1;
+		}
+	}else if(user.getXCoordinate() == 19){
+		if(gameBoard[user.getXCoordinate()-2][user.getYCoordinate()] != ' '){
+			user.setExitWay(gameBoard[user.getXCoordinate()-2][user.getYCoordinate()]);
+			user.setArea(controlOfArea(user.getXCoordinate()-2,user.getYCoordinate()));
+			firstMove(user,point);
+			return 1;
+		}
+	}else if(user.getYCoordinate() == 39){
+		if(gameBoard[user.getXCoordinate()][user.getYCoordinate()-6] != ' '){
+			user.setExitWay(gameBoard[user.getXCoordinate()][user.getYCoordinate()-6]);
+			user.setArea(controlOfArea(user.getXCoordinate(),user.getYCoordinate()-6));
+			firstMove(user,point);
+			return 1;
+		}
+		
+	}
+	return 0;
+}
+int Game::findO(int i,int j,player &user,char point){
+	//kullanicinin buludugunu yerin dort bir yaninda 'o' harfinin yani cikis olup olmadigini kontrol ediyor
+	if(gameBoard[i-1][j] == 'o'){
+		//eger cikis varsa cikisa kullacinin isareti konur ve setExiti 1 yapilir
+		gameBoard[i-1][j] = user.getUser();
+		//kullacinin bir onceki yerine ise bir onceki yeri tutan parametre gonderilir ve buda pointtir.
+		gameBoard[user.getXCoordinate()][user.getYCoordinate()] = point;
+		user.setExit(1);
+		user.setXCoordinate(i-1);
+		user.setYCoordinate(j);
+		return 1;
+	}else if(gameBoard[i][j+2] == 'o'){
+		gameBoard[i][j+2] = user.getUser();
+		gameBoard[user.getXCoordinate()][user.getYCoordinate()] = point;
+		user.setExit(1);
+		user.setXCoordinate(i);
+		user.setYCoordinate(j+2);
+		return 1;
+	}else if(gameBoard[i+1][j] == 'o'){
+		gameBoard[i+1][j] = user.getUser();
+		gameBoard[user.getXCoordinate()][user.getYCoordinate()] = point;
+		user.setExit(1);
+		user.setXCoordinate(i+1);
+		user.setYCoordinate(j);
+		return 1;
+	}else if(gameBoard[i][j-2] == 'o'){
+		gameBoard[i][j-2] = user.getUser();
+		gameBoard[user.getXCoordinate()][user.getYCoordinate()] = point;
+		user.setExit(1);
+		user.setXCoordinate(i);
+		user.setYCoordinate(j-2);
+		return 1;
+	}
+}
+int Game::betweenTwoCard(player &user){
+//iki kart arasi gecis icin butun bolgelere teker teker bakilir
+//butun bolgelerin dort bir tarafina bakılır ve ilerleyebilecegi herhangibir kart varsa ilgilerde guncelleme yapar
+	if(user.getArea() == 1){
+		int i = 1,j=13;
+		for(i;i < 7;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+		i=6,j=13;
+		for(j; j >=2 ;j--){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 3){
+		int i = 1,j=26;
+		for(i;i < 7;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=6,j=26;
+		for(j; j < 38  ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 7){
+		int i = 13,j=13;
+		for(i;i < 19;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+		i=13;
+		for(j; j >=2 ;j--){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 9){
+		int i = 13,j=26;
+		for(i; i < 19; i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=13;
+		for(j; j < 38 ; j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 2){
+		int i = 1,j=14;
+		for(i;i < 7;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=6;
+		for(j; j<26 ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+		i=1,j=25;
+		for(i;i < 7;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 4){
+		int i = 7,j=13;
+		for(i;i < 13;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+		i=12;
+		for(j; j >=2 ;j--){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+		i=7,j=13;
+		for(j; j >=2 ;j--){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 8){
+		int i = 13,j=14;
+		for(i;i < 18;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=13;
+		for(j; j <26 ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+		j=25;
+		for(i;i < 18;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 6){
+		int i = 7,j=26;
+		for(i;i < 13;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=12;
+		for(j; j<38 ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+		i=7,j=26;
+		for(j; j<38 ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+	}else if(user.getArea() == 5){
+		int i = 7,j=14;
+		for(i;i < 13;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j-5] != ' '){
+					user.setExitWay(gameBoard[i][j-5]);
+					user.setArea(controlOfArea(i,j-5));
+					return 1;
+				}
+			}
+		}
+		i=12;
+		for(j; j<26 ;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i+2][j] != ' '){
+					user.setExitWay(gameBoard[i+2][j]);
+					user.setArea(controlOfArea(i+2,j));
+					return 1;
+				}
+			}
+		}
+		i=7,j=14;
+		for(j;j < 26;j++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i-2][j] != ' '){
+					user.setExitWay(gameBoard[i-2][j]);
+					user.setArea(controlOfArea(i-2,j));
+					return 1;
+				}
+			}
+		}
+		j=25;
+		for(i; i < 13 ;i++){
+			if(gameBoard[i][j] == user.getUser()){
+				if(gameBoard[i][j+5] != ' '){
+					user.setExitWay(gameBoard[i][j+5]);
+					user.setArea(controlOfArea(i,j+5));
+					return 1;
+				}
+			}
+		}
+	}
+	return 0;
+}
+void Game::extraFunction(player &user,int i,int j,char point){
+	//gonderilen i ve j parametreleri ile gameboardun belirlenen yerinin kullacinin cikis yolunua esit olup olmadigina bakilir
+	if(gameBoard[i][j] == user.getExitWay()){
+		//eger esitse etrafinde cikis olup olmadigi kontrol edilir
+		if(findO(i,j,user,point) == 1){
+		}else{
+			//eger cikisda yoksa oraya kullanicinin simgesi atanir,kordinatlar degisir
+			gameBoard[i][j] = user.getUser();
+			gameBoard[user.getXCoordinate()][user.getYCoordinate()] = point;
+			user.setExit(1);
+			user.setXCoordinate(i);
+			user.setYCoordinate(j);
+		}
+	}
+}
+int Game::firstMove(player &user,char point){
+	int j;
+	//bu fonksiyonda her bir bolge icin kartin koselerine bakilir 
+	//bu koselerde exitway olup olmadgina bakilir ve ona gore atama yapilir
+	if(user.getArea() == 1){
+		for(int i = 1; i< 7;i+=5){
+			for(j=2; j < 14; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 1; i< 7;i++){
+			for(j=2; j < 14; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 2){
+		for(int i = 1; i< 7;i+=5){
+			for(j=14; j < 26; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 1; i< 7;i++){
+			for(j=14; j < 26; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 3){
+		for(int i = 1; i< 7;i+=5){
+			for(j=26; j < 38; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 1; i< 7;i++){
+			for(j=26; j < 38; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 4){
+		for(int i = 7; i< 13;i+=5){
+			for(j=2; j < 14; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 7; i< 13;i++){
+			for(j=2; j < 14; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 5){
+		for(int i = 7; i< 13;i+=5){
+			for(j=14; j < 26; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 7; i< 13;i++){
+			for(j=14; j < 26; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 6){
+		for(int i = 7; i< 13;i+=5){
+			for(j=26; j < 38; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 7; i< 13;i++){
+			for(j=26; j < 38; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 7){
+		for(int i = 13; i< 19;i+=5){
+			for(j=2; j < 14; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 13; i< 19;i++){
+			for(j=2; j < 14; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 8){
+		for(int i = 13; i< 19;i+=5){
+			for(j=14; j < 26; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 13; i< 19;i++){
+			for(j=14; j < 26; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}else if(user.getArea() == 9){
+		for(int i = 13; i< 19;i+=5){
+			for(j=26; j < 38; j++ ){
+				extraFunction(user,i,j,point);
+			}
+		}
+		for(int i = 13; i< 19;i++){
+			for(j=26; j < 38; j+=11 ){
+				extraFunction(user,i,j,point);
+			}
+		}
+	}
+}
+int Game::controlOfArea(int x, int y){
+	//belirlen kordinatlar ile bolge bulunur
+
+	if(x >= 1 && x < 7 && y >= 2 && y < 14 )	
+		return 1;
+	if(x >= 1 && x < 7 && y >= 14 && y < 26 )
+		return 2;
+	if(x >= 1 && x < 7 && y >= 26 && y < 38 )
+		return 3;
+	if(x >= 7 && x < 13 && y >= 2 && y < 14 )
+		return 4;
+	if(x >= 7 && x < 13 && y >= 14 && y < 26 )
+		return 5;
+	if(x >= 7 && x < 13 && y >= 26 && y < 38 )
+		return 6;
+	if(x >= 13 && x < 19 && y >= 2 && y < 14 )
+		return 7;
+	if(x >= 13 && x < 19 && y >= 14 && y < 26 )
+		return 8;
+	if(x >= 13 && x < 19 && y >= 26 && y < 38 )
+		return 9;
+}
+void Game::putBoard(vector<vector<char>> card,int area){
+	int y=0,k=0;
+	//her bolge icin belirlenen kordinatlar ile oyun tahtasina atama yapilir
+
+	if(area == 1){
+		for(int i = 1; i < 7;i++){
+			for(int j=2; j < 14;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 2){
+		for(int i = 1; i < 7;i++){
+			for(int j=14; j < 26;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 3){
+		for(int i = 1; i < 7;i++){
+			for(int j=26; j < 38;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 4){
+		for(int i = 7; i < 13;i++){
+			for(int j=2; j < 14;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 5){
+		for(int i = 7; i < 13;i++){
+			for(int j=14; j < 26;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 6){
+		for(int i = 7; i < 13;i++){
+			for(int j=26; j < 38;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 7){
+		for(int i = 13; i < 19;i++){
+			for(int j=2; j < 14;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 8){
+		for(int i = 13; i < 19;i++){
+			for(int j=14; j < 26;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}else if(area == 9){
+		for(int i = 13; i < 19;i++){
+			for(int j=26; j < 38;j++){
+				gameBoard[i][j] = card[y][k];
+				k++;
+			}
+			y++;
+			k=0;
+		}
+	}
+}
+int Game::playGame(){
+	//asil oyunun oynadndigi fonksiyondur
+	player userX('X',0);
+	player userY('Y',0);
+	int selection,turn,area,cont=0,temp=0,counter=0;
+	vector<int> numOfArea;
+	//kullanicilara 3 tane kart verilir
+	for(int i = 0; i < 3;i++){
+		userX.gameCards[i] = card();
+		userY.gameCards[i] = card();
+	}
+	//X ve Y nin yerlerine bakilarak kordinatları kaydediliyor
+	for(int i = 0; i < 20; i++){
+		for(int j = 0; j < 40 ; j++){
+			if(gameBoard[i][j] == 'X'){
+				userX.setXCoordinate(i);
+				userX.setYCoordinate(j);
+			}
+			if(gameBoard[i][j] == 'Y'){
+				userY.setXCoordinate(i);
+				userY.setYCoordinate(j);
+			}
+		}
+	}
+	//oyun dongusudur
+	while(1){
+		// her seferinde oyunun bitip bitmedigi kontrol ediliyor
+		cont = controlOfExit(userX,userY);
+		if(cont == 1){
+			return 1;
+		}
+		//kullanicidan istedigi kart ne kadar dondurecegi ve hangi bolgeye oynayacagi sorulur
+		do{
+			cout << "X Player Select Your Card : ";
+			cin >> selection;
+
+		}while(selection >= 4 || selection <= 0);
+		do{
+			cout << "X Player How Many Times You Want To Turn : ";
+			cin >> turn;
+
+		}while(turn >= 4 || turn <= -1);
+		do{
+			cout << "X Player Which Area: ";
+			cin >> area;
+
+		}while(area >= 10 || area <= 0 || controlRandom2(numOfArea,area) == 0);
+		numOfArea.push_back(area);
+		// daha sonra secilen kart oyun tahtasina konur
+		putBoard(userX.gameCards[selection-1],area);
+		print();
+		//oynadigi kartin yerine baska bir kart konur
+		userX.gameCards[selection-1] = card();
+		
+		//eger getexit == 0 daha once hic hamle yapmamis demektir ona gore ayri hamleler yapiliyor
+		if(userX.getExit() == 0){
+			char ch = userX.getExitWay();//kullanici hamle yaparsa bir onceki yerine koymak icin onceden bir onceki yeri aliniyor
+			int a = moveNumber(userX,'o');//fakat ilk hamlesinde her zaman daha onceki yeri 'o' olacaktir
+			print();
+			//burdaki if ile ilk hamleyi yaptıktan sonra bir hamle olup olmayaagi kontrol ediliyor
+			if(a == 1){
+				int b;
+				do{
+					//eger varsa islme yapiliyor
+					char ch = userX.getExitWay();
+					b = betweenTwoCard(userX);
+					if(b == 1)
+						firstMove(userX,ch);
+				}while(b == 1);
+			}
+		}else{
+			//eger getexit != 0 ilk islem olmadigi ici direk kartlar arasi gecis fonksiyonuan giriyor
+			int a;
+			do{
+				char ch = userX.getExitWay();
+				a = betweenTwoCard(userX);
+				if(a == 1)
+					firstMove(userX,ch);
+				else
+					break;
+			}while(1);
+		}
+
+		////////////////////////////////////////////////////////////////
+
+		//yukaridaki islemin aynisi ikinci kullanici icin yapiliyor
+		if(userY.getExit() == 0){
+			char ch = userY.getExitWay();
+			int a = moveNumber(userY,'o');
+			if(a == 1){
+				int b;
+				do{
+					char ch = userY.getExitWay();
+					b = betweenTwoCard(userY);
+					if(b == 1)
+						firstMove(userY,ch);
+				}while(b == 1);
+			}
+		}else{
+			int a;
+			do{
+				char ch = userY.getExitWay();
+				
+				a = betweenTwoCard(userY);
+				if(a == 1)
+					firstMove(userY,ch);
+				else
+					break;
+			}while(1);
+		}
+		print();
+		cont = controlOfExit(userX,userY);
+		if(cont == 1){
+			return 1;
+		}
+		if(counter > 20){
+			cout << "BERABERE" << endl;
+			return 1;
+		}
+		counter++;
+		
+		//yukaridaki islemlerin aynisi asagidada yapiliyor tek fark sadece birinci ve ikinci kullanici kartlari secme sirasidir
+		
+		/////////////////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////BETWEEN TWO PLAYER//////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////////////////
+
+		cont = controlOfExit(userX,userY);
+		if(cont == 1){
+			return 1;
+		}
+		do{
+			cout << "Y Player Select Your Card : ";
+			cin >> selection;
+
+		}while(selection >= 4 || selection <= 0);
+		do{
+			cout << "Y Player How Many Times You Want To Turn : ";
+			cin >> turn;
+
+		}while(turn >= 4 || turn <= -1);
+		do{
+			cout << "Y Player Which Area: ";
+			cin >> area;
+
+		}while(area >= 10 || area <= 0 || controlRandom2(numOfArea,area) == 0);
+		numOfArea.push_back(area);
+
+		putBoard(userY.gameCards[selection-1],area);
+		print();
+		userY.gameCards[selection-1] = card();
+		
+		if(userX.getExit() == 0){
+			char ch = userX.getExitWay();
+			int a = moveNumber(userX,'o');
+			if(a == 1){
+				int b;
+				do{
+					char ch = userX.getExitWay();
+					b = betweenTwoCard(userX);
+					if(b == 1)
+						firstMove(userX,ch);
+				}while(b == 1);
+			}
+		}else{
+			int a;
+			do{
+				char ch = userX.getExitWay();
+				a = betweenTwoCard(userX);
+				if(a == 1)
+					firstMove(userX,ch);
+				else
+					break;
+			}while(1);
+		}
+
+		//////////////////////////////////////////////////////////////
+
+		if(userY.getExit() == 0){
+			char ch = userY.getExitWay();
+			int a = moveNumber(userY,'o');
+			if(a == 1){
+				int b;
+				do{
+					char ch = userY.getExitWay();
+					b = betweenTwoCard(userY);
+					if(b == 1)
+						firstMove(userY,ch);
+				}while(b == 1);
+			}
+		}else{
+			int a;
+			do{
+				char ch = userY.getExitWay();
+				a = betweenTwoCard(userY);
+				if(a == 1)
+					firstMove(userY,ch);
+				else
+					break;
+			}while(1);
+		}
+		print();
+		cont = controlOfExit(userX,userY);		
+		if(cont == 1){
+			return 1;
+		}
+		if(counter  > 20){
+			cout << "BERABERE" << endl;
+			return 1;
+		}
+		counter++;
+	}
+}
+int main(int argc, char const *argv[]){
+	srand(time(NULL));
+	Game tsuro;//oyun olusturuluyor
+
+	tsuro.print();//oyun tahtasi ekrana bastiriliyor
+	if(tsuro.playGame() == 1)// ve oyun oyaniyor eger 1 dondururse oyun bitmis demektir
+		cout << "THE END" << endl;
+	return 0;
+}
